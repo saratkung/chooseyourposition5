@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { Lock } from "lucide-react";
 import { AuthShell } from "@/components/layout/AuthShell";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
@@ -28,6 +29,14 @@ export default function RegisterPage() {
   const [form, setForm] = useState<RegisterFormState>(EMPTY);
   const [errors, setErrors] = useState<Partial<Record<keyof RegisterFormState, string>>>({});
   const [submitting, setSubmitting] = useState(false);
+  const [registrationOpen, setRegistrationOpen] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    const supabase = getSupabaseBrowserClient();
+    supabase.rpc("is_registration_open").then(({ data }) => {
+      setRegistrationOpen(data ?? true);
+    });
+  }, []);
 
   function update<K extends keyof RegisterFormState>(key: K, value: RegisterFormState[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -84,6 +93,24 @@ export default function RegisterPage() {
     push("สมัครสมาชิกสำเร็จ", "success");
     router.push("/waiting");
     router.refresh();
+  }
+
+  if (registrationOpen === false) {
+    return (
+      <AuthShell title="REGISTRATION CLOSED" subtitle="ขณะนี้ปิดรับสมัครแล้ว">
+        <div className="flex flex-col items-center gap-4 py-4 text-center">
+          <Lock className="h-10 w-10 text-muted" />
+          <p className="text-sm text-muted">
+            กรุณาติดต่อผู้ดูแลระบบหากคุณคิดว่านี่เป็นข้อผิดพลาด
+          </p>
+          <Link href="/login" className="w-full">
+            <Button variant="outline" size="lg" className="w-full">
+              BACK TO LOGIN
+            </Button>
+          </Link>
+        </div>
+      </AuthShell>
+    );
   }
 
   return (

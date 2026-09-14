@@ -16,6 +16,9 @@ export function toFriendlyMessage(error: unknown): string {
   if (lower.includes("invalid login credentials")) {
     return "อีเมลหรือรหัสผ่านไม่ถูกต้อง";
   }
+  if (lower.includes("registration_closed") || lower.includes("registration closed")) {
+    return "ขณะนี้ปิดรับสมัครแล้ว กรุณาติดต่อผู้ดูแลระบบ";
+  }
   if (lower.includes("seniority")) {
     return "ลำดับอาวุโสนี้มีผู้ใช้งานแล้ว กรุณาตรวจสอบลำดับอาวุโสของคุณแล้วลองใหม่อีกครั้ง";
   }

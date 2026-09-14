@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Play, Pause, RotateCcw, Square, SkipForward, ListOrdered, Shuffle } from "lucide-react";
+import { Play, Pause, RotateCcw, Square, SkipForward, ListOrdered, Shuffle, UserPlus, Lock } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -85,6 +85,23 @@ export default function AdminSettingsPage() {
     );
   }
 
+  async function handleRegistrationToggle(open: boolean) {
+    setPending(true);
+    const supabase = getSupabaseBrowserClient();
+    const { data, error } = await supabase.rpc("set_registration_open", { p_open: open });
+    setPending(false);
+    if (error) {
+      push(toFriendlyMessage(error), "error");
+      return;
+    }
+    const result = data as unknown as SelectPositionResult;
+    if (!result.success) {
+      push(result.message ?? "ไม่สามารถเปลี่ยนสถานะการลงทะเบียนได้", "error");
+      return;
+    }
+    push(open ? "เปิดรับสมัครแล้ว" : "ปิดรับสมัครแล้ว", "success");
+  }
+
   async function handleUpdateOpenAt() {
     if (!openAt || !settings) return;
     setPending(true);
@@ -130,6 +147,33 @@ export default function AdminSettingsPage() {
           );
         })}
       </div>
+
+      <Card className="flex flex-col gap-4 p-6">
+        <h2 className="text-sm font-semibold uppercase tracking-widest text-muted">Registration</h2>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <p className="flex items-center gap-2 text-sm">
+            {settings?.registration_open ?? true ? (
+              <>
+                <UserPlus className="h-4 w-4 text-status-available" />
+                <span className="text-status-available">เปิดรับสมัครอยู่</span> — ใครก็เข้ามาสมัครที่ /register ได้
+              </>
+            ) : (
+              <>
+                <Lock className="h-4 w-4 text-status-taken" />
+                <span className="text-status-taken">ปิดรับสมัครแล้ว</span> — สมัครใหม่ไม่ได้ (บัญชีเดิมยังล็อกอินได้ตามปกติ)
+              </>
+            )}
+          </p>
+          <Button
+            variant={(settings?.registration_open ?? true) ? "danger" : "primary"}
+            size="sm"
+            disabled={pending}
+            onClick={() => handleRegistrationToggle(!(settings?.registration_open ?? true))}
+          >
+            {(settings?.registration_open ?? true) ? "CLOSE REGISTRATION" : "OPEN REGISTRATION"}
+          </Button>
+        </div>
+      </Card>
 
       <Card className="flex flex-col gap-4 p-6">
         <h2 className="text-sm font-semibold uppercase tracking-widest text-muted">

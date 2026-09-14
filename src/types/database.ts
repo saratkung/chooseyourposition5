@@ -68,6 +68,7 @@ export type SystemSettingsRow = {
   system_status: SystemStatus;
   selection_mode: SelectionMode;
   current_turn_seniority_order: number | null;
+  registration_open: boolean;
   open_at: string | null;
   close_at: string | null;
   updated_at: string;
@@ -146,6 +147,14 @@ export type Database = {
       };
       advance_turn: {
         Args: { p_to_seniority_order: number | null };
+        Returns: SelectPositionResult;
+      };
+      is_registration_open: {
+        Args: Record<string, never>;
+        Returns: boolean;
+      };
+      set_registration_open: {
+        Args: { p_open: boolean };
         Returns: SelectPositionResult;
       };
     };
