@@ -11,6 +11,7 @@ REGISTER → LOGIN → WAITING ROOM → POSITION SELECTION (realtime) → CONFIR
    - [`database/migrations/0001_init.sql`](database/migrations/0001_init.sql) — all tables, RLS policies, the atomic `select_position()` function, audit-log triggers, and adds `positions` / `selections` / `system_settings` / `activity_logs` / `profiles` to the `supabase_realtime` publication.
    - [`database/migrations/0002_seniority_queue.sql`](database/migrations/0002_seniority_queue.sql) — adds the seniority-order turn queue (see below).
    - [`database/migrations/0003_seniority_at_registration.sql`](database/migrations/0003_seniority_at_registration.sql) — captures `seniority_order` directly at signup (register form was simplified — see below).
+   - [`database/migrations/0004_grants.sql`](database/migrations/0004_grants.sql) — **required**: base table/function GRANTs for `authenticated`/`service_role`. Tables created via the SQL Editor don't always inherit Supabase's usual default privileges, and RLS alone isn't enough — Postgres checks the base GRANT before it ever evaluates a policy. Without this file the app will fail with "permission denied for table X" even for a logged-in user.
 3. In **Project Settings → API**, copy the Project URL, anon public key, and service_role key.
 4. In **Authentication → Providers → Email**, decide whether to require email confirmation. If left on, new users won't get a session immediately after `/register` and will be sent to `/login` with a "confirm your email" message instead.
 
