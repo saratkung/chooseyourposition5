@@ -2,8 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { LayoutGrid, User as UserIcon, ListOrdered } from "lucide-react";
-import { AppShell, type NavItem } from "@/components/layout/AppShell";
+import { AppShell } from "@/components/layout/AppShell";
+import { USER_NAV_ITEMS } from "@/components/layout/nav-items";
 import { PositionCard } from "@/components/positions/PositionCard";
 import { PositionFilters, type PositionFilterState } from "@/components/positions/PositionFilters";
 import { ConfirmSelectModal } from "@/components/positions/ConfirmSelectModal";
@@ -19,11 +19,6 @@ import { useCurrentTurn } from "@/hooks/useCurrentTurn";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import type { PositionRow } from "@/types/database";
 
-const NAV_ITEMS: NavItem[] = [
-  { href: "/positions", label: "Positions", icon: <LayoutGrid className="h-4 w-4" /> },
-  { href: "/my-position", label: "My Position", icon: <UserIcon className="h-4 w-4" /> },
-  { href: "/results", label: "Results", icon: <ListOrdered className="h-4 w-4" /> },
-];
 
 const PAGE_SIZE = 12;
 
@@ -107,7 +102,7 @@ export default function PositionsPage() {
   }
 
   return (
-    <AppShell navItems={NAV_ITEMS} eyebrow="Position Selection">
+    <AppShell navItems={USER_NAV_ITEMS} eyebrow="Position Selection">
       <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-8 sm:px-6 lg:px-10 lg:py-10">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>

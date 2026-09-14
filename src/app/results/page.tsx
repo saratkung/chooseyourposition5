@@ -1,23 +1,21 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { LayoutGrid, User as UserIcon, ListOrdered, Search } from "lucide-react";
-import { AppShell, type NavItem } from "@/components/layout/AppShell";
+import { Search } from "lucide-react";
+import { AppShell } from "@/components/layout/AppShell";
+import { ADMIN_NAV_ITEMS, USER_NAV_ITEMS } from "@/components/layout/nav-items";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { StatTile } from "@/components/ui/StatTile";
 import { PositionStatusBadge } from "@/components/positions/PositionStatusBadge";
+import { useAuth } from "@/lib/supabase/auth-context";
 import { useRealtimeResults } from "@/hooks/useRealtimeResults";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { formatDateTime } from "@/lib/utils/format";
 
-const NAV_ITEMS: NavItem[] = [
-  { href: "/positions", label: "Positions", icon: <LayoutGrid className="h-4 w-4" /> },
-  { href: "/my-position", label: "My Position", icon: <UserIcon className="h-4 w-4" /> },
-  { href: "/results", label: "Results", icon: <ListOrdered className="h-4 w-4" /> },
-];
-
 export default function ResultsPage() {
+  const { profile } = useAuth();
+  const navItems = profile?.role === "admin" ? ADMIN_NAV_ITEMS : USER_NAV_ITEMS;
   const { results, loading } = useRealtimeResults();
   const [query, setQuery] = useState("");
   const debouncedQuery = useDebouncedValue(query, 250);
@@ -43,7 +41,7 @@ export default function ResultsPage() {
   }, [results]);
 
   return (
-    <AppShell navItems={NAV_ITEMS} eyebrow="Position Selection">
+    <AppShell navItems={navItems} eyebrow={profile?.role === "admin" ? "Admin Console" : "Position Selection"}>
       <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-8 sm:px-6 lg:px-10 lg:py-10">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">RESULTS</h1>

@@ -2,20 +2,15 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { LayoutGrid, User as UserIcon, MapPin, Building2, BadgeCheck, ListOrdered } from "lucide-react";
-import { AppShell, type NavItem } from "@/components/layout/AppShell";
+import { MapPin, Building2, BadgeCheck } from "lucide-react";
+import { AppShell } from "@/components/layout/AppShell";
+import { USER_NAV_ITEMS } from "@/components/layout/nav-items";
 import { Button } from "@/components/ui/Button";
 import { useAuth } from "@/lib/supabase/auth-context";
 import { useRealtimeSelections } from "@/hooks/useRealtimeSelections";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { formatDateTime } from "@/lib/utils/format";
 import type { PositionRow } from "@/types/database";
-
-const NAV_ITEMS: NavItem[] = [
-  { href: "/positions", label: "Positions", icon: <LayoutGrid className="h-4 w-4" /> },
-  { href: "/my-position", label: "My Position", icon: <UserIcon className="h-4 w-4" /> },
-  { href: "/results", label: "Results", icon: <ListOrdered className="h-4 w-4" /> },
-];
 
 export default function MyPositionPage() {
   const { user } = useAuth();
@@ -40,7 +35,7 @@ export default function MyPositionPage() {
   }, [selection]);
 
   return (
-    <AppShell navItems={NAV_ITEMS} eyebrow="Position Selection">
+    <AppShell navItems={USER_NAV_ITEMS} eyebrow="Position Selection">
       <div className="mx-auto flex max-w-2xl flex-col gap-6 px-4 py-10 sm:px-6 lg:py-16">
         <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">MY POSITION</h1>
 

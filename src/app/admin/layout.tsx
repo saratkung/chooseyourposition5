@@ -1,16 +1,7 @@
 import { redirect } from "next/navigation";
-import { LayoutDashboard, ListChecks, Settings, Activity, Users, ListOrdered } from "lucide-react";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
-import { AppShell, type NavItem } from "@/components/layout/AppShell";
-
-const ADMIN_NAV: NavItem[] = [
-  { href: "/admin", label: "Dashboard", icon: <LayoutDashboard className="h-4 w-4" /> },
-  { href: "/admin/positions", label: "Positions", icon: <ListChecks className="h-4 w-4" /> },
-  { href: "/admin/users", label: "Users", icon: <Users className="h-4 w-4" /> },
-  { href: "/admin/settings", label: "System", icon: <Settings className="h-4 w-4" /> },
-  { href: "/admin/monitor", label: "Monitor", icon: <Activity className="h-4 w-4" /> },
-  { href: "/results", label: "Results", icon: <ListOrdered className="h-4 w-4" /> },
-];
+import { AppShell } from "@/components/layout/AppShell";
+import { ADMIN_NAV_ITEMS } from "@/components/layout/nav-items";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const supabase = await getSupabaseServerClient();
@@ -30,7 +21,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   if (profile?.role !== "admin") redirect("/");
 
   return (
-    <AppShell navItems={ADMIN_NAV} eyebrow="Admin Console">
+    <AppShell navItems={ADMIN_NAV_ITEMS} eyebrow="Admin Console">
       {children}
     </AppShell>
   );
