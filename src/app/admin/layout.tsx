@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { LayoutDashboard, ListChecks, Settings, Activity, Users } from "lucide-react";
+import { LayoutDashboard, ListChecks, Settings, Activity, Users, ListOrdered } from "lucide-react";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 import { AppShell, type NavItem } from "@/components/layout/AppShell";
 
@@ -9,6 +9,7 @@ const ADMIN_NAV: NavItem[] = [
   { href: "/admin/users", label: "Users", icon: <Users className="h-4 w-4" /> },
   { href: "/admin/settings", label: "System", icon: <Settings className="h-4 w-4" /> },
   { href: "/admin/monitor", label: "Monitor", icon: <Activity className="h-4 w-4" /> },
+  { href: "/results", label: "Results", icon: <ListOrdered className="h-4 w-4" /> },
 ];
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {

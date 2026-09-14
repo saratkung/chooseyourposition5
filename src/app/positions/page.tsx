@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { LayoutGrid, User as UserIcon } from "lucide-react";
+import { LayoutGrid, User as UserIcon, ListOrdered } from "lucide-react";
 import { AppShell, type NavItem } from "@/components/layout/AppShell";
 import { PositionCard } from "@/components/positions/PositionCard";
 import { PositionFilters, type PositionFilterState } from "@/components/positions/PositionFilters";
@@ -22,6 +22,7 @@ import type { PositionRow } from "@/types/database";
 const NAV_ITEMS: NavItem[] = [
   { href: "/positions", label: "Positions", icon: <LayoutGrid className="h-4 w-4" /> },
   { href: "/my-position", label: "My Position", icon: <UserIcon className="h-4 w-4" /> },
+  { href: "/results", label: "Results", icon: <ListOrdered className="h-4 w-4" /> },
 ];
 
 const PAGE_SIZE = 12;

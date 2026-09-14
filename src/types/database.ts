@@ -111,6 +111,20 @@ export type CurrentTurn = {
   last_name?: string | null;
 };
 
+export type ResultRow = {
+  position_id: string;
+  position_code: string;
+  department: string;
+  division: string;
+  location: string;
+  status: PositionStatus;
+  selected_by_first_name: string | null;
+  selected_by_last_name: string | null;
+  selected_by_seniority_order: number | null;
+  reference_code: string | null;
+  selected_at: string | null;
+};
+
 type Table<Row, Insert> = { Row: Row; Insert: Insert; Update: Partial<Insert>; Relationships: [] };
 
 export type Database = {
@@ -156,6 +170,10 @@ export type Database = {
       set_registration_open: {
         Args: { p_open: boolean };
         Returns: SelectPositionResult;
+      };
+      get_results: {
+        Args: Record<string, never>;
+        Returns: ResultRow[];
       };
     };
   };

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { LayoutGrid, User as UserIcon, MapPin, Building2, BadgeCheck } from "lucide-react";
+import { LayoutGrid, User as UserIcon, MapPin, Building2, BadgeCheck, ListOrdered } from "lucide-react";
 import { AppShell, type NavItem } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/Button";
 import { useAuth } from "@/lib/supabase/auth-context";
@@ -14,6 +14,7 @@ import type { PositionRow } from "@/types/database";
 const NAV_ITEMS: NavItem[] = [
   { href: "/positions", label: "Positions", icon: <LayoutGrid className="h-4 w-4" /> },
   { href: "/my-position", label: "My Position", icon: <UserIcon className="h-4 w-4" /> },
+  { href: "/results", label: "Results", icon: <ListOrdered className="h-4 w-4" /> },
 ];
 
 export default function MyPositionPage() {
