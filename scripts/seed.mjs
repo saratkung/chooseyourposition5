@@ -51,7 +51,7 @@ const REGION5_STATIONS = [
   { province: "พะเยา", name: "สภ.แม่กา" },
 ];
 
-async function ensureUser({ email, firstName, lastName, userCode, batch, classYear, groupName }) {
+async function ensureUser({ email, firstName, lastName, seniorityOrder }) {
   const { data: created, error } = await admin.auth.admin.createUser({
     email,
     password: DEMO_PASSWORD,
@@ -59,10 +59,7 @@ async function ensureUser({ email, firstName, lastName, userCode, batch, classYe
     user_metadata: {
       first_name: firstName,
       last_name: lastName,
-      user_code: userCode,
-      batch,
-      class_year: classYear,
-      group_name: groupName,
+      ...(seniorityOrder != null ? { seniority_order: seniorityOrder } : {}),
     },
   });
 
@@ -83,10 +80,6 @@ async function main() {
     email: "admin@position-system.demo",
     firstName: "System",
     lastName: "Administrator",
-    userCode: "ADMIN-001",
-    batch: "-",
-    classYear: "-",
-    groupName: "-",
   });
 
   // Promote the admin profile to role=admin. Service-role calls bypass RLS
@@ -107,19 +100,16 @@ async function main() {
       email,
       firstName: `เจ้าหน้าที่`,
       lastName: `ทดสอบ${i}`,
-      userCode: `U-${String(i).padStart(4, "0")}`,
-      batch: "รุ่นที่ 30",
-      classYear: `ปี ${((i - 1) % 4) + 1}`,
-      groupName: `กลุ่ม ${((i - 1) % 3) + 1}`,
+      seniorityOrder: i,
     });
     demoUsers.push({ email, seniority: i });
   }
 
-  // seniority_order is assigned by user_code (works whether the account was
-  // just created above or already existed from a previous seed run).
-  for (const { seniority } of demoUsers) {
-    const userCode = `U-${String(seniority).padStart(4, "0")}`;
-    await admin.from("profiles").update({ seniority_order: seniority }).eq("user_code", userCode);
+  // Belt-and-suspenders: if any of these accounts already existed from a
+  // previous seed run (so the createUser call above was a no-op), make sure
+  // their seniority_order still matches.
+  for (const { email, seniority } of demoUsers) {
+    await admin.from("profiles").update({ seniority_order: seniority }).eq("email", email);
   }
 
   console.log("3) Creating the 19 real ภาค 5 positions...");

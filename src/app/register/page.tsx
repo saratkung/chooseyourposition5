@@ -8,29 +8,28 @@ import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
-import { registerSchema, type RegisterInput } from "@/lib/validation/auth";
+import { registerSchema } from "@/lib/validation/auth";
 import { toFriendlyMessage } from "@/lib/utils/errors";
 
-const EMPTY: RegisterInput = {
+const EMPTY = {
   firstName: "",
   lastName: "",
-  userCode: "",
-  batch: "",
-  classYear: "",
-  groupName: "",
+  seniorityOrder: "",
   email: "",
   password: "",
   confirmPassword: "",
 };
 
+type RegisterFormState = typeof EMPTY;
+
 export default function RegisterPage() {
   const router = useRouter();
   const { push } = useToast();
-  const [form, setForm] = useState<RegisterInput>(EMPTY);
-  const [errors, setErrors] = useState<Partial<Record<keyof RegisterInput, string>>>({});
+  const [form, setForm] = useState<RegisterFormState>(EMPTY);
+  const [errors, setErrors] = useState<Partial<Record<keyof RegisterFormState, string>>>({});
   const [submitting, setSubmitting] = useState(false);
 
-  function update<K extends keyof RegisterInput>(key: K, value: RegisterInput[K]) {
+  function update<K extends keyof RegisterFormState>(key: K, value: RegisterFormState[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
   }
 
@@ -38,9 +37,9 @@ export default function RegisterPage() {
     e.preventDefault();
     const result = registerSchema.safeParse(form);
     if (!result.success) {
-      const fieldErrors: Partial<Record<keyof RegisterInput, string>> = {};
+      const fieldErrors: Partial<Record<keyof RegisterFormState, string>> = {};
       for (const issue of result.error.issues) {
-        const key = issue.path[0] as keyof RegisterInput;
+        const key = issue.path[0] as keyof RegisterFormState;
         if (!fieldErrors[key]) fieldErrors[key] = issue.message;
       }
       setErrors(fieldErrors);
@@ -57,10 +56,7 @@ export default function RegisterPage() {
         data: {
           first_name: result.data.firstName,
           last_name: result.data.lastName,
-          user_code: result.data.userCode,
-          batch: result.data.batch,
-          class_year: result.data.classYear,
-          group_name: result.data.groupName,
+          seniority_order: result.data.seniorityOrder,
         },
       },
     });
@@ -108,28 +104,13 @@ export default function RegisterPage() {
           autoComplete="family-name"
         />
         <Input
-          label="รหัสประจำตัว"
-          value={form.userCode}
-          onChange={(e) => update("userCode", e.target.value)}
-          error={errors.userCode}
-        />
-        <Input
-          label="รุ่น"
-          value={form.batch}
-          onChange={(e) => update("batch", e.target.value)}
-          error={errors.batch}
-        />
-        <Input
-          label="ชั้นปี"
-          value={form.classYear}
-          onChange={(e) => update("classYear", e.target.value)}
-          error={errors.classYear}
-        />
-        <Input
-          label="หมวด / กลุ่ม"
-          value={form.groupName}
-          onChange={(e) => update("groupName", e.target.value)}
-          error={errors.groupName}
+          label="ลำดับอาวุโส"
+          type="number"
+          min={1}
+          value={form.seniorityOrder}
+          onChange={(e) => update("seniorityOrder", e.target.value)}
+          error={errors.seniorityOrder}
+          className="sm:col-span-2"
         />
         <Input
           label="Email"

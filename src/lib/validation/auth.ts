@@ -10,10 +10,10 @@ export const registerSchema = z
   .object({
     firstName: z.string().trim().min(1, "กรุณากรอกชื่อ").max(100),
     lastName: z.string().trim().min(1, "กรุณากรอกนามสกุล").max(100),
-    userCode: z.string().trim().min(1, "กรุณากรอกรหัสประจำตัว").max(50),
-    batch: z.string().trim().min(1, "กรุณากรอกรุ่น").max(50),
-    classYear: z.string().trim().min(1, "กรุณากรอกชั้นปี").max(50),
-    groupName: z.string().trim().min(1, "กรุณากรอกหมวด/กลุ่ม").max(100),
+    seniorityOrder: z.coerce
+      .number()
+      .int("กรุณากรอกลำดับอาวุโสเป็นจำนวนเต็ม")
+      .min(1, "ลำดับอาวุโสต้องมากกว่า 0"),
     email: z.email("อีเมลไม่ถูกต้อง"),
     password,
     confirmPassword: z.string(),

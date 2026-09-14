@@ -12,7 +12,7 @@ import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { toFriendlyMessage } from "@/lib/utils/errors";
 import { parseCsv, toCsv } from "@/lib/utils/csv";
 
-const CSV_HEADERS = ["user_code", "seniority_order"] as const;
+const CSV_HEADERS = ["email", "seniority_order"] as const;
 
 export default function AdminUsersPage() {
   const { profiles, loading } = useRealtimeProfiles();
@@ -42,7 +42,7 @@ export default function AdminUsersPage() {
     return participants.filter(
       (p) =>
         `${p.first_name} ${p.last_name}`.toLowerCase().includes(q) ||
-        p.user_code.toLowerCase().includes(q),
+        p.email.toLowerCase().includes(q),
     );
   }, [participants, debouncedQuery]);
 
@@ -69,7 +69,7 @@ export default function AdminUsersPage() {
     const rows = participants
       .slice()
       .sort((a, b) => (a.seniority_order ?? 9999) - (b.seniority_order ?? 9999))
-      .map((p) => [p.user_code, p.seniority_order ?? ""]);
+      .map((p) => [p.email, p.seniority_order ?? ""]);
     const csv = toCsv(CSV_HEADERS, rows);
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
@@ -98,27 +98,27 @@ export default function AdminUsersPage() {
 
     const [header, ...dataRows] = rows;
     const colIndex = (name: string) => header.findIndex((h) => h.trim().toLowerCase() === name);
-    const codeCol = colIndex("user_code");
+    const emailCol = colIndex("email");
     const seniorityCol = colIndex("seniority_order");
 
-    if (codeCol === -1 || seniorityCol === -1) {
+    if (emailCol === -1 || seniorityCol === -1) {
       setImporting(false);
-      push("ไฟล์ CSV ต้องมีคอลัมน์ user_code และ seniority_order", "error");
+      push("ไฟล์ CSV ต้องมีคอลัมน์ email และ seniority_order", "error");
       return;
     }
 
-    const byCode = new Map(participants.map((p) => [p.user_code.toLowerCase(), p]));
+    const byEmail = new Map(participants.map((p) => [p.email.toLowerCase(), p]));
     const supabase = getSupabaseBrowserClient();
     let updated = 0;
     const notFound: string[] = [];
 
     for (const row of dataRows) {
-      const code = row[codeCol]?.trim();
+      const email = row[emailCol]?.trim();
       const seniorityRaw = row[seniorityCol]?.trim();
-      if (!code || !seniorityRaw) continue;
-      const match = byCode.get(code.toLowerCase());
+      if (!email || !seniorityRaw) continue;
+      const match = byEmail.get(email.toLowerCase());
       if (!match) {
-        notFound.push(code);
+        notFound.push(email);
         continue;
       }
       const seniority = Number(seniorityRaw);
@@ -132,7 +132,7 @@ export default function AdminUsersPage() {
 
     setImporting(false);
     push(
-      `อัปเดตลำดับอาวุโสสำเร็จ ${updated} รายการ${notFound.length > 0 ? ` (ไม่พบผู้ใช้ ${notFound.length} รหัส — ต้องลงทะเบียนก่อน)` : ""}`,
+      `อัปเดตลำดับอาวุโสสำเร็จ ${updated} รายการ${notFound.length > 0 ? ` (ไม่พบผู้ใช้ ${notFound.length} อีเมล — ต้องลงทะเบียนก่อน)` : ""}`,
       notFound.length > 0 ? "info" : "success",
     );
   }
@@ -161,7 +161,7 @@ export default function AdminUsersPage() {
 
       <div className="relative max-w-sm">
         <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
-        <Input placeholder="ค้นหาชื่อ หรือรหัสประจำตัว..." value={query} onChange={(e) => setQuery(e.target.value)} className="pl-10" />
+        <Input placeholder="ค้นหาชื่อ หรืออีเมล..." value={query} onChange={(e) => setQuery(e.target.value)} className="pl-10" />
       </div>
 
       <Card className="px-6 py-4">
@@ -179,7 +179,7 @@ export default function AdminUsersPage() {
               <thead>
                 <tr className="border-b border-border text-xs uppercase tracking-widest text-muted">
                   <th className="py-3 pr-4 font-semibold">Name</th>
-                  <th className="py-3 pr-4 font-semibold">User Code</th>
+                  <th className="py-3 pr-4 font-semibold">Email</th>
                   <th className="py-3 pr-4 font-semibold">Seniority Order</th>
                   <th className="py-3 pr-4 font-semibold">Status</th>
                 </tr>
@@ -190,7 +190,7 @@ export default function AdminUsersPage() {
                     <td className="py-3 pr-4">
                       {p.first_name} {p.last_name}
                     </td>
-                    <td className="py-3 pr-4 font-mono text-muted">{p.user_code}</td>
+                    <td className="py-3 pr-4 text-muted">{p.email}</td>
                     <td className="py-3 pr-4">
                       <input
                         type="number"

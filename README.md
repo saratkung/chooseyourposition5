@@ -10,6 +10,7 @@ REGISTER → LOGIN → WAITING ROOM → POSITION SELECTION (realtime) → CONFIR
 2. Open **SQL Editor** and run, in order:
    - [`database/migrations/0001_init.sql`](database/migrations/0001_init.sql) — all tables, RLS policies, the atomic `select_position()` function, audit-log triggers, and adds `positions` / `selections` / `system_settings` / `activity_logs` / `profiles` to the `supabase_realtime` publication.
    - [`database/migrations/0002_seniority_queue.sql`](database/migrations/0002_seniority_queue.sql) — adds the seniority-order turn queue (see below).
+   - [`database/migrations/0003_seniority_at_registration.sql`](database/migrations/0003_seniority_at_registration.sql) — captures `seniority_order` directly at signup (register form was simplified — see below).
 3. In **Project Settings → API**, copy the Project URL, anon public key, and service_role key.
 4. In **Authentication → Providers → Email**, decide whether to require email confirmation. If left on, new users won't get a session immediately after `/register` and will be sent to `/login` with a "confirm your email" message instead.
 
@@ -52,7 +53,8 @@ They'll land on `/admin` on next login.
 
 `system_settings.selection_mode` is `open` (original free-for-all — anyone can click SELECT the instant the system is LIVE) or `seniority` (turn-based — only the officer whose `profiles.seniority_order` matches `system_settings.current_turn_seniority_order` may select; the queue auto-advances to the next not-yet-selected officer, by lowest `seniority_order`, the instant a selection succeeds).
 
-- **Assign seniority**: `/admin/users` — search a registered participant and set their `Seniority Order` inline, or bulk-assign via **IMPORT CSV** with columns `user_code,seniority_order` (matched against already-registered accounts by `user_code` — there's no way to pre-create login accounts for people who haven't registered yet, since Supabase Auth owns that). **EXPORT CSV** dumps the current roster in the same format.
+- **Register form**: simplified to just ชื่อ / นามสกุล / ลำดับอาวุโส + Email/Password (Supabase Auth needs the latter two to log in at all) — each participant enters their own seniority number at signup, captured atomically by the `handle_new_user` trigger. A duplicate seniority number is rejected at signup (partial unique index) with a friendly error, so a typo can't silently collide with someone else's rank.
+- **Correcting seniority later**: `/admin/users` — search a registered participant and edit their `Seniority Order` inline, or bulk-correct via **IMPORT CSV** with columns `email,seniority_order` (matched by email). **EXPORT CSV** dumps the current roster in the same format.
 - **Turn the mode on**: `/admin/settings` → **SENIORITY QUEUE**. Switching in auto-starts the queue at the lowest `seniority_order` among participants who haven't selected yet.
 - **Manual control**: the same panel shows who currently holds the turn (name + rank, via `get_current_turn()`, which deliberately exposes nothing else from `profiles`) with **ข้ามไปคิวถัดไป** (skip a no-show to the next rank) and a manual "set queue to rank N" override — both call the admin-only `advance_turn()` RPC.
 - **What participants see** on `/positions`: a banner reading either "ถึงคิวของคุณแล้ว!" (their turn — SELECT is enabled) or "กำลังรอคิว — ขณะนี้ถึงคิวของ [name] (ลำดับที่ N)" (not their turn — every card shows "รอถึงคิวของคุณ" instead of a SELECT button). This banner and every card update live as the admin advances the queue or someone selects, same Realtime path as everything else.
@@ -83,7 +85,7 @@ They'll land on `/admin` on next login.
 
 ## What's intentionally simplified vs. the original spec
 
-- **profiles fields**: the spec's DB field list (`year`, `group`) and its register-form field list (`รุ่น`, `ชั้นปี`, `หมวด/กลุ่ม`) don't fully line up. Implemented as `batch` (รุ่น), `class_year` (ชั้นปี), `group_name` (หมวด/กลุ่ม) to cover the full register form.
+- **Register form fields**: per a later request, simplified down to ชื่อ / นามสกุล / ลำดับอาวุโส + Email/Password only. The `profiles` table still has `user_code` / `batch` / `class_year` / `group_name` columns from the original spec (harmless — `handle_new_user` defaults them to `''` / the auth user id when not supplied), they're just no longer collected or shown anywhere in the UI.
 - **System control buttons**: the spec lists OPEN / PAUSE / RESUME / CLOSE / FINISH, but only 4 system statuses exist (`waiting/live/paused/finished`). CLOSE was consolidated into FINISH SYSTEM rather than inventing a 5th status not present in the DB schema section.
 - **Pagination**: positions are fetched once via Realtime (not paginated at the DB query level) and paginated client-side in the grid — reasonable at "a few hundred rows," and the whole point of a Realtime subscription is that it wants the full live set anyway.
 

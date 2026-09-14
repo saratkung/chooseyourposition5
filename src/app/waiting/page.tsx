@@ -39,7 +39,8 @@ export default function WaitingPage() {
         <h1 className="text-3xl font-bold tracking-tight sm:text-5xl">POSITION SELECTION</h1>
         {profile && (
           <p className="mt-1 text-sm text-muted">
-            สวัสดี {profile.first_name} {profile.last_name} ({profile.user_code})
+            สวัสดี {profile.first_name} {profile.last_name}
+            {profile.seniority_order != null && ` (ลำดับอาวุโสที่ ${profile.seniority_order})`}
           </p>
         )}
       </div>

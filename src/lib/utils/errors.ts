@@ -16,8 +16,14 @@ export function toFriendlyMessage(error: unknown): string {
   if (lower.includes("invalid login credentials")) {
     return "อีเมลหรือรหัสผ่านไม่ถูกต้อง";
   }
-  if (lower.includes("user already registered") || lower.includes("already registered") || lower.includes("duplicate key")) {
+  if (lower.includes("seniority")) {
+    return "ลำดับอาวุโสนี้มีผู้ใช้งานแล้ว กรุณาตรวจสอบลำดับอาวุโสของคุณแล้วลองใหม่อีกครั้ง";
+  }
+  if (lower.includes("user already registered") || lower.includes("already registered")) {
     return "อีเมลนี้ถูกใช้งานแล้ว กรุณาใช้อีเมลอื่นหรือเข้าสู่ระบบ";
+  }
+  if (lower.includes("duplicate key") || lower.includes("database error saving new user")) {
+    return "ไม่สามารถบันทึกข้อมูลได้ อีเมลหรือลำดับอาวุโสนี้อาจถูกใช้งานแล้ว กรุณาตรวจสอบแล้วลองใหม่";
   }
   if (lower.includes("email not confirmed")) {
     return "กรุณายืนยันอีเมลของคุณก่อนเข้าสู่ระบบ";
