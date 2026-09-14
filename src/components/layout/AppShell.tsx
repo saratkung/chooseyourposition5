@@ -60,9 +60,9 @@ export function AppShell({
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors",
+                  "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
                   active
-                    ? "bg-accent-soft text-accent"
+                    ? "bg-accent text-white shadow-lg shadow-accent/30"
                     : "text-muted hover:bg-surface-2 hover:text-foreground",
                 )}
               >
@@ -75,9 +75,21 @@ export function AppShell({
 
         <div className="border-t border-border px-4 py-4">
           {profile && (
-            <p className="mb-2 truncate text-xs text-muted">
-              {profile.first_name} {profile.last_name}
-            </p>
+            <div className="mb-3 flex items-center gap-2.5">
+              <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent-soft text-xs font-bold text-accent">
+                {(profile.first_name[0] ?? "").toUpperCase()}
+                {(profile.last_name[0] ?? "").toUpperCase()}
+                <span className="absolute -right-0.5 -bottom-0.5 h-2.5 w-2.5 rounded-full border-2 border-surface bg-status-available" />
+              </div>
+              <div className="min-w-0">
+                <p className="truncate text-xs font-semibold text-foreground">
+                  {profile.first_name} {profile.last_name}
+                </p>
+                <p className="truncate text-[11px] text-muted">
+                  {profile.role === "admin" ? "System Administrator" : "Participant"}
+                </p>
+              </div>
+            </div>
           )}
           <button
             onClick={handleSignOut}
