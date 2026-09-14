@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { LogOut, ShieldCheck } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { useAuth } from "@/lib/supabase/auth-context";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
@@ -11,7 +10,12 @@ import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 export interface NavItem {
   href: string;
   label: string;
-  icon: LucideIcon;
+  // A rendered element (e.g. `<LayoutDashboard className="h-4 w-4" />`),
+  // NOT a component reference. NavItem[] is passed from server components
+  // (admin/layout.tsx) into this client component, and only serializable
+  // values — plain data and React elements — can cross that boundary; a
+  // bare component/function reference cannot.
+  icon: React.ReactNode;
 }
 
 export function AppShell({
@@ -51,7 +55,6 @@ export function AppShell({
         <nav className="flex flex-1 flex-col gap-1 px-3 py-4">
           {navItems.map((item) => {
             const active = pathname === item.href;
-            const Icon = item.icon;
             return (
               <Link
                 key={item.href}
@@ -63,7 +66,7 @@ export function AppShell({
                     : "text-muted hover:bg-surface-2 hover:text-foreground",
                 )}
               >
-                <Icon className="h-4 w-4" />
+                {item.icon}
                 {item.label}
               </Link>
             );
@@ -103,7 +106,6 @@ export function AppShell({
       <nav className="fixed inset-x-0 bottom-0 z-40 flex border-t border-border bg-surface/95 backdrop-blur lg:hidden">
         {navItems.map((item) => {
           const active = pathname === item.href;
-          const Icon = item.icon;
           return (
             <Link
               key={item.href}
@@ -113,7 +115,7 @@ export function AppShell({
                 active ? "text-accent" : "text-muted",
               )}
             >
-              <Icon className="h-4.5 w-4.5" />
+              {item.icon}
               {item.label}
             </Link>
           );

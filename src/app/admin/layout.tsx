@@ -4,11 +4,11 @@ import { getSupabaseServerClient } from "@/lib/supabase/server";
 import { AppShell, type NavItem } from "@/components/layout/AppShell";
 
 const ADMIN_NAV: NavItem[] = [
-  { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/admin/positions", label: "Positions", icon: ListChecks },
-  { href: "/admin/users", label: "Users", icon: Users },
-  { href: "/admin/settings", label: "System", icon: Settings },
-  { href: "/admin/monitor", label: "Monitor", icon: Activity },
+  { href: "/admin", label: "Dashboard", icon: <LayoutDashboard className="h-4 w-4" /> },
+  { href: "/admin/positions", label: "Positions", icon: <ListChecks className="h-4 w-4" /> },
+  { href: "/admin/users", label: "Users", icon: <Users className="h-4 w-4" /> },
+  { href: "/admin/settings", label: "System", icon: <Settings className="h-4 w-4" /> },
+  { href: "/admin/monitor", label: "Monitor", icon: <Activity className="h-4 w-4" /> },
 ];
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {

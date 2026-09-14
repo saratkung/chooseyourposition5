@@ -12,8 +12,8 @@ import { formatDateTime } from "@/lib/utils/format";
 import type { PositionRow } from "@/types/database";
 
 const NAV_ITEMS: NavItem[] = [
-  { href: "/positions", label: "Positions", icon: LayoutGrid },
-  { href: "/my-position", label: "My Position", icon: UserIcon },
+  { href: "/positions", label: "Positions", icon: <LayoutGrid className="h-4 w-4" /> },
+  { href: "/my-position", label: "My Position", icon: <UserIcon className="h-4 w-4" /> },
 ];
 
 export default function MyPositionPage() {

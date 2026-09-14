@@ -64,7 +64,11 @@ async function ensureUser({ email, firstName, lastName, seniorityOrder }) {
   });
 
   if (error) {
-    if (error.message?.toLowerCase().includes("already registered")) {
+    const alreadyExists =
+      error.code === "email_exists" ||
+      error.status === 422 ||
+      /already.*registered|already.*exists/i.test(error.message ?? "");
+    if (alreadyExists) {
       console.log(`  (exists) ${email}`);
       return null;
     }
