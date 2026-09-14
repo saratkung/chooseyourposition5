@@ -15,6 +15,7 @@ export type PositionStatus = "available" | "selecting" | "taken" | "disabled";
 export type SelectionStatus = "confirmed" | "cancelled";
 export type UserRole = "user" | "admin";
 export type ProfileStatus = "active" | "suspended";
+export type SelectionMode = "open" | "seniority";
 
 export type RoleRow = {
   id: string;
@@ -34,6 +35,7 @@ export type ProfileRow = {
   email: string;
   role: UserRole;
   status: ProfileStatus;
+  seniority_order: number | null;
   created_at: string;
   updated_at: string;
 };
@@ -64,6 +66,8 @@ export type SelectionRow = {
 export type SystemSettingsRow = {
   id: string;
   system_status: SystemStatus;
+  selection_mode: SelectionMode;
+  current_turn_seniority_order: number | null;
   open_at: string | null;
   close_at: string | null;
   updated_at: string;
@@ -83,15 +87,27 @@ export type SelectPositionResult = {
   error_code?:
     | "UNAUTHORIZED"
     | "SYSTEM_NOT_LIVE"
+    | "NOT_YOUR_TURN"
     | "ALREADY_SELECTED"
     | "POSITION_NOT_FOUND"
     | "POSITION_TAKEN"
     | "POSITION_DISABLED"
-    | "SERVER_ERROR";
+    | "SERVER_ERROR"
+    | "INVALID_STATUS"
+    | "INVALID_MODE"
+    | "NOT_FOUND";
   message?: string;
   selection_id?: string;
   reference_code?: string;
   position_code?: string;
+  current_turn_seniority_order?: number | null;
+};
+
+export type CurrentTurn = {
+  active: boolean;
+  seniority_order?: number;
+  first_name?: string | null;
+  last_name?: string | null;
 };
 
 type Table<Row, Insert> = { Row: Row; Insert: Insert; Update: Partial<Insert>; Relationships: [] };
@@ -118,6 +134,18 @@ export type Database = {
       };
       set_system_status: {
         Args: { p_status: SystemStatus };
+        Returns: SelectPositionResult;
+      };
+      get_current_turn: {
+        Args: Record<string, never>;
+        Returns: CurrentTurn;
+      };
+      set_selection_mode: {
+        Args: { p_mode: SelectionMode };
+        Returns: SelectPositionResult;
+      };
+      advance_turn: {
+        Args: { p_to_seniority_order: number | null };
         Returns: SelectPositionResult;
       };
     };

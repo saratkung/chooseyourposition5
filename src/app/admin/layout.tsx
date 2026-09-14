@@ -1,11 +1,12 @@
 import { redirect } from "next/navigation";
-import { LayoutDashboard, ListChecks, Settings, Activity } from "lucide-react";
+import { LayoutDashboard, ListChecks, Settings, Activity, Users } from "lucide-react";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 import { AppShell, type NavItem } from "@/components/layout/AppShell";
 
 const ADMIN_NAV: NavItem[] = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/positions", label: "Positions", icon: ListChecks },
+  { href: "/admin/users", label: "Users", icon: Users },
   { href: "/admin/settings", label: "System", icon: Settings },
   { href: "/admin/monitor", label: "Monitor", icon: Activity },
 ];

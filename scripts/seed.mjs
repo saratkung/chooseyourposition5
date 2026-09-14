@@ -1,9 +1,10 @@
 // Demo data seeder — run with:
 //   node --env-file=.env.local scripts/seed.mjs
 //
-// Creates 1 admin, 20 demo users, 30 positions, and a handful of sample
-// selections (made through the real select_position() RPC, not a raw
-// INSERT, so it also exercises the atomic-locking code path).
+// Creates 1 admin, 20 demo users (seniority_order 1-20), the 19 real ภาค 5
+// positions, and makes 8 sample selections through the seniority queue
+// using the real select_position() RPC (not a raw INSERT), so it exercises
+// the actual turn-gate + atomic-locking code path end to end.
 //
 // Requires SUPABASE_SERVICE_ROLE_KEY — server-side only, never used inside
 // the Next.js app itself.
@@ -26,14 +27,29 @@ const admin = createClient(url, serviceRoleKey, {
 });
 
 const DEMO_PASSWORD = "Demo1234!";
-const DEPARTMENTS = ["กอง 1", "กอง 2", "กอง 3", "กอง 4", "กอง 5"];
-const DIVISIONS = ["กลุ่มงานอำนวยการ", "กลุ่มงานปฏิบัติการ", "กลุ่มงานสนับสนุน"];
-const LOCATIONS = ["กรุงเทพฯ", "เชียงใหม่", "ขอนแก่น", "สงขลา", "ชลบุรี", "นครราชสีมา"];
 
-function positionCode(deptIndex, seq) {
-  const letter = String.fromCharCode("A".charCodeAt(0) + deptIndex);
-  return `${letter}-${String(seq).padStart(3, "0")}`;
-}
+// ภาค 5 : 19 ตำแหน่ง
+const REGION5_STATIONS = [
+  { province: "เชียงใหม่", name: "สภ.สันกำแพง" },
+  { province: "เชียงใหม่", name: "สถ.แม่โจ้" },
+  { province: "เชียงใหม่", name: "สภ.แม่อาย" },
+  { province: "เชียงใหม่", name: "สภ.ฝาง" },
+  { province: "เชียงใหม่", name: "สภ.แม่แตง" },
+  { province: "เชียงใหม่", name: "สภ.โหล่งขอด" },
+  { province: "เชียงใหม่", name: "สภ.จอมทอง" },
+  { province: "ลำปาง", name: "สภ.แม่พริก" },
+  { province: "ลำปาง", name: "สภ.เมืองลำปาง" },
+  { province: "ลำปาง", name: "สภ.งาว" },
+  { province: "ลำพูน", name: "สภ.นิคมอุตสาหกรรม" },
+  { province: "ลำพูน", name: "สภ.ทุ่งหัวช้าง" },
+  { province: "น่าน", name: "สภ.เรือง" },
+  { province: "เชียงราย", name: "สภ.แม่อ้อ" },
+  { province: "เชียงราย", name: "สภ.เกาะช้าง" },
+  { province: "เชียงราย", name: "สภ.เชียงของ" },
+  { province: "แพร่", name: "สภ.วังชิ้น" },
+  { province: "แพร่", name: "สภ.ห้วยม้า" },
+  { province: "พะเยา", name: "สภ.แม่กา" },
+];
 
 async function ensureUser({ email, firstName, lastName, userCode, batch, classYear, groupName }) {
   const { data: created, error } = await admin.auth.admin.createUser({
@@ -73,43 +89,53 @@ async function main() {
     groupName: "-",
   });
 
-  // Promote the admin profile to role=admin.
+  // Promote the admin profile to role=admin. Service-role calls bypass RLS
+  // entirely and auth.uid() is null in this context, which the
+  // protect_privileged_profile_fields trigger (0002 migration) explicitly
+  // allows for exactly this kind of backend/seed operation.
   const { data: adminAuthUser } = await admin.auth.admin.listUsers();
   const adminUser = adminAuthUser.users.find((u) => u.email === "admin@position-system.demo");
   if (adminUser) {
     await admin.from("profiles").update({ role: "admin" }).eq("user_id", adminUser.id);
   }
 
-  console.log("2) Creating 20 demo users...");
+  console.log("2) Creating 20 demo users with seniority_order 1-20...");
   const demoUsers = [];
   for (let i = 1; i <= 20; i++) {
     const email = `user${String(i).padStart(2, "0")}@position-system.demo`;
-    const user = await ensureUser({
+    await ensureUser({
       email,
-      firstName: `ผู้ใช้`,
+      firstName: `เจ้าหน้าที่`,
       lastName: `ทดสอบ${i}`,
       userCode: `U-${String(i).padStart(4, "0")}`,
       batch: "รุ่นที่ 30",
       classYear: `ปี ${((i - 1) % 4) + 1}`,
       groupName: `กลุ่ม ${((i - 1) % 3) + 1}`,
     });
-    demoUsers.push({ email, user });
+    demoUsers.push({ email, seniority: i });
   }
 
-  console.log("3) Creating 30 positions...");
+  // seniority_order is assigned by user_code (works whether the account was
+  // just created above or already existed from a previous seed run).
+  for (const { seniority } of demoUsers) {
+    const userCode = `U-${String(seniority).padStart(4, "0")}`;
+    await admin.from("profiles").update({ seniority_order: seniority }).eq("user_code", userCode);
+  }
+
+  console.log("3) Creating the 19 real ภาค 5 positions...");
   const positions = [];
-  for (let i = 0; i < 30; i++) {
-    const deptIndex = i % DEPARTMENTS.length;
-    const code = positionCode(deptIndex, Math.floor(i / DEPARTMENTS.length) + 1);
+  for (let i = 0; i < REGION5_STATIONS.length; i++) {
+    const { province, name } = REGION5_STATIONS[i];
+    const code = `5-${String(i + 1).padStart(2, "0")}`;
     const { data, error } = await admin
       .from("positions")
       .upsert(
         {
           position_code: code,
-          department: DEPARTMENTS[deptIndex],
-          division: DIVISIONS[i % DIVISIONS.length],
-          location: LOCATIONS[i % LOCATIONS.length],
-          description: `ตำแหน่งปฏิบัติงาน ${code}`,
+          department: "ภาค 5",
+          division: province,
+          location: name,
+          description: `ตำแหน่งปฏิบัติงาน ${name} จังหวัด${province}`,
           capacity: 1,
           status: "available",
         },
@@ -122,19 +148,20 @@ async function main() {
   }
   console.log(`  ${positions.length} positions ready`);
 
-  console.log("4) Opening the system (LIVE) so demo selections can be made...");
+  console.log("4) Opening the system LIVE in seniority-queue mode, starting at seniority_order 1...");
   await admin.from("system_settings").select("id").limit(1).maybeSingle().then(async ({ data }) => {
+    const payload = { system_status: "live", selection_mode: "seniority", current_turn_seniority_order: 1 };
     if (data) {
-      await admin.from("system_settings").update({ system_status: "live" }).eq("id", data.id);
+      await admin.from("system_settings").update(payload).eq("id", data.id);
     } else {
-      await admin.from("system_settings").insert({ system_status: "live" });
+      await admin.from("system_settings").insert(payload);
     }
   });
 
-  console.log("5) Making 8 sample selections through the real select_position() RPC...");
+  console.log("5) Making 8 sample selections in seniority order (1 -> 8) through the real select_position() RPC...");
   const anon = createClient(url, anonKey);
   for (let i = 0; i < 8; i++) {
-    const { email } = demoUsers[i];
+    const { email } = demoUsers[i]; // seniority 1..8, matches current_turn advancing 1 by 1
     const { data: signIn, error: signInError } = await anon.auth.signInWithPassword({
       email,
       password: DEMO_PASSWORD,
@@ -157,7 +184,7 @@ async function main() {
     await anon.auth.signOut();
   }
 
-  console.log("6) Resetting system status to WAITING (demo default)...");
+  console.log("6) Resetting system status to WAITING (queue position preserved for the demo)...");
   await admin.from("system_settings").select("id").limit(1).maybeSingle().then(async ({ data }) => {
     if (data) {
       await admin
@@ -167,7 +194,8 @@ async function main() {
     }
   });
 
-  console.log("\nDone. Demo login: user01@position-system.demo / Demo1234!");
+  console.log("\nDone. Queue is at seniority_order 9 (user09@position-system.demo) when you flip the system LIVE again.");
+  console.log("Demo login: user01@position-system.demo ... user20@position-system.demo / Demo1234!");
   console.log("Admin login: admin@position-system.demo / Demo1234!");
 }
 

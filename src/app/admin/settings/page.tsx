@@ -1,16 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { Play, Pause, RotateCcw, Square } from "lucide-react";
+import { Play, Pause, RotateCcw, Square, SkipForward, ListOrdered, Shuffle } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { SystemStatusPill } from "@/components/system/SystemStatusPill";
 import { useToast } from "@/components/ui/Toast";
 import { useRealtimeSystem } from "@/hooks/useRealtimeSystem";
+import { useCurrentTurn } from "@/hooks/useCurrentTurn";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { toFriendlyMessage } from "@/lib/utils/errors";
-import type { SystemStatus, SelectPositionResult } from "@/types/database";
+import type { SystemStatus, SelectionMode, SelectPositionResult } from "@/types/database";
 
 const ACTIONS: { status: SystemStatus; label: string; icon: typeof Play; from: SystemStatus[] }[] = [
   { status: "live", label: "OPEN SYSTEM", icon: Play, from: ["waiting", "paused"] },
@@ -21,9 +22,11 @@ const ACTIONS: { status: SystemStatus; label: string; icon: typeof Play; from: S
 
 export default function AdminSettingsPage() {
   const { settings } = useRealtimeSystem();
+  const { turn } = useCurrentTurn(settings);
   const { push } = useToast();
   const [pending, setPending] = useState(false);
   const [openAt, setOpenAt] = useState("");
+  const [manualSeniority, setManualSeniority] = useState("");
 
   async function handleTransition(status: SystemStatus) {
     setPending(true);
@@ -40,6 +43,46 @@ export default function AdminSettingsPage() {
       return;
     }
     push(`SYSTEM STATUS → ${status.toUpperCase()}`, "success");
+  }
+
+  async function handleSelectionMode(mode: SelectionMode) {
+    setPending(true);
+    const supabase = getSupabaseBrowserClient();
+    const { data, error } = await supabase.rpc("set_selection_mode", { p_mode: mode });
+    setPending(false);
+    if (error) {
+      push(toFriendlyMessage(error), "error");
+      return;
+    }
+    const result = data as unknown as SelectPositionResult;
+    if (!result.success) {
+      push(result.message ?? "ไม่สามารถเปลี่ยนโหมดการเลือกได้", "error");
+      return;
+    }
+    push(mode === "seniority" ? "เปิดใช้งานคิวอาวุโสแล้ว" : "เปลี่ยนเป็นโหมดเปิดอิสระแล้ว", "success");
+  }
+
+  async function handleAdvanceTurn(toSeniority: number | null) {
+    setPending(true);
+    const supabase = getSupabaseBrowserClient();
+    const { data, error } = await supabase.rpc("advance_turn", { p_to_seniority_order: toSeniority });
+    setPending(false);
+    if (error) {
+      push(toFriendlyMessage(error), "error");
+      return;
+    }
+    const result = data as unknown as SelectPositionResult;
+    if (!result.success) {
+      push(result.message ?? "ไม่สามารถเปลี่ยนคิวได้", "error");
+      return;
+    }
+    setManualSeniority("");
+    push(
+      result.current_turn_seniority_order != null
+        ? `เปลี่ยนคิวเป็นลำดับอาวุโสที่ ${result.current_turn_seniority_order}`
+        : "ไม่มีลำดับอาวุโสถัดไป (คิวสิ้นสุดแล้ว)",
+      "success",
+    );
   }
 
   async function handleUpdateOpenAt() {
@@ -87,6 +130,75 @@ export default function AdminSettingsPage() {
           );
         })}
       </div>
+
+      <Card className="flex flex-col gap-4 p-6">
+        <h2 className="text-sm font-semibold uppercase tracking-widest text-muted">
+          Selection Mode — ลำดับอาวุโส
+        </h2>
+
+        <div className="grid grid-cols-2 gap-3">
+          <Button
+            variant={settings?.selection_mode === "open" ? "primary" : "outline"}
+            disabled={pending}
+            onClick={() => handleSelectionMode("open")}
+            className="flex-col gap-1.5 py-4"
+          >
+            <Shuffle className="h-4 w-4" />
+            OPEN (เลือกพร้อมกัน)
+          </Button>
+          <Button
+            variant={settings?.selection_mode === "seniority" ? "primary" : "outline"}
+            disabled={pending}
+            onClick={() => handleSelectionMode("seniority")}
+            className="flex-col gap-1.5 py-4"
+          >
+            <ListOrdered className="h-4 w-4" />
+            SENIORITY QUEUE (ทีละคิว)
+          </Button>
+        </div>
+
+        {settings?.selection_mode === "seniority" && (
+          <div className="flex flex-col gap-3 rounded-md border border-border bg-surface-2 p-4">
+            <p className="text-sm">
+              คิวปัจจุบัน:{" "}
+              {turn.active ? (
+                <span className="font-semibold text-status-available">
+                  ลำดับที่ {turn.seniority_order} — {turn.first_name ?? "-"} {turn.last_name ?? ""}
+                </span>
+              ) : (
+                <span className="text-muted">ไม่มี (คิวยังไม่เริ่ม หรือสิ้นสุดแล้ว)</span>
+              )}
+            </p>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={pending}
+                onClick={() => handleAdvanceTurn(null)}
+              >
+                <SkipForward className="h-3.5 w-3.5" />
+                ข้ามไปคิวถัดไป
+              </Button>
+              <Input
+                type="number"
+                min={1}
+                label="ตั้งคิวเป็นลำดับอาวุโสที่..."
+                value={manualSeniority}
+                onChange={(e) => setManualSeniority(e.target.value)}
+                className="sm:w-48"
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={pending || !manualSeniority}
+                onClick={() => handleAdvanceTurn(Number(manualSeniority))}
+              >
+                ตั้งคิว
+              </Button>
+            </div>
+          </div>
+        )}
+      </Card>
 
       <Card className="flex flex-col gap-4 p-6">
         <h2 className="text-sm font-semibold uppercase tracking-widest text-muted">

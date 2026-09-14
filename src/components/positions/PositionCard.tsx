@@ -13,7 +13,7 @@ export function PositionCard({
 }: {
   position: PositionRow;
   isSelectingLive: boolean;
-  disabledReason: string | null;
+  disabledReason: "system_not_live" | "not_your_turn" | null;
   onSelect: (position: PositionRow) => void;
 }) {
   const effectiveStatus = isSelectingLive && position.status === "available" ? "selecting" : position.status;
@@ -54,6 +54,10 @@ export function PositionCard({
         <Button size="md" variant="secondary" disabled className="w-full">
           UNAVAILABLE
         </Button>
+      ) : disabledReason === "not_your_turn" ? (
+        <div className="rounded-md border border-status-selecting/30 bg-status-selecting/10 py-2.5 text-center text-xs font-bold tracking-widest text-status-selecting">
+          รอถึงคิวของคุณ
+        </div>
       ) : (
         <Button
           size="md"

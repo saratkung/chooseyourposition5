@@ -35,6 +35,7 @@ export function toFriendlyMessage(error: unknown): string {
 export const SELECTION_ERROR_MESSAGES: Record<string, string> = {
   UNAUTHORIZED: "กรุณาเข้าสู่ระบบก่อนทำรายการ",
   SYSTEM_NOT_LIVE: "ระบบยังไม่เปิดให้เลือกตำแหน่งในขณะนี้",
+  NOT_YOUR_TURN: "ยังไม่ถึงคิวของคุณ กรุณารอจนกว่าจะถึงลำดับอาวุโสของคุณ",
   ALREADY_SELECTED: "คุณได้เลือกตำแหน่งไปแล้ว ไม่สามารถเลือกซ้ำได้",
   POSITION_NOT_FOUND: "ไม่พบตำแหน่งนี้ในระบบ",
   POSITION_TAKEN: "ตำแหน่งนี้ถูกเลือกโดยผู้ใช้อื่นแล้ว",

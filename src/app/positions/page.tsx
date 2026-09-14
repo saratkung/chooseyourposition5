@@ -15,6 +15,7 @@ import { useRealtimePositions } from "@/hooks/useRealtimePositions";
 import { useRealtimeSystem } from "@/hooks/useRealtimeSystem";
 import { useRealtimeSelections } from "@/hooks/useRealtimeSelections";
 import { usePositionActivityBroadcast } from "@/hooks/usePositionActivityBroadcast";
+import { useCurrentTurn } from "@/hooks/useCurrentTurn";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import type { PositionRow } from "@/types/database";
 
@@ -27,11 +28,12 @@ const PAGE_SIZE = 12;
 
 export default function PositionsPage() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { positions, loading, error } = useRealtimePositions();
   const { settings } = useRealtimeSystem();
   const { selection } = useRealtimeSelections(user?.id);
   const { selectingIds, notifySelecting, notifyIdle } = usePositionActivityBroadcast();
+  const { turn } = useCurrentTurn(settings);
 
   const [filters, setFilters] = useState<PositionFilterState>({
     query: "",
@@ -88,6 +90,10 @@ export default function PositionsPage() {
   const pageItems = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   const systemLive = settings?.system_status === "live";
+  const isSeniorityMode = settings?.selection_mode === "seniority";
+  const isMyTurn =
+    !isSeniorityMode ||
+    (profile?.seniority_order != null && profile.seniority_order === settings?.current_turn_seniority_order);
 
   function openConfirm(position: PositionRow) {
     setActivePosition(position);
@@ -126,6 +132,22 @@ export default function PositionsPage() {
           </div>
         )}
 
+        {systemLive && isSeniorityMode && (
+          <div
+            className={
+              isMyTurn
+                ? "rounded-lg border border-status-available/30 bg-status-available/10 px-5 py-4 text-sm font-semibold text-status-available"
+                : "rounded-lg border border-status-selecting/30 bg-status-selecting/10 px-5 py-4 text-sm text-status-selecting"
+            }
+          >
+            {isMyTurn
+              ? `ถึงคิวของคุณแล้ว! (ลำดับอาวุโสที่ ${profile?.seniority_order}) กรุณาเลือกตำแหน่ง`
+              : turn.active
+                ? `กำลังรอคิว — ขณะนี้ถึงคิวของ ${turn.first_name ?? "-"} ${turn.last_name ?? ""} (ลำดับอาวุโสที่ ${turn.seniority_order})`
+                : "คิวยังไม่เริ่ม กรุณารอผู้ดูแลระบบเปิดคิวอาวุโส"}
+          </div>
+        )}
+
         <PositionFilters
           filters={filters}
           departments={departments}
@@ -152,7 +174,7 @@ export default function PositionsPage() {
                 key={position.id}
                 position={position}
                 isSelectingLive={selectingIds.has(position.id)}
-                disabledReason={!systemLive ? "system_not_live" : null}
+                disabledReason={!systemLive ? "system_not_live" : !isMyTurn ? "not_your_turn" : null}
                 onSelect={openConfirm}
               />
             ))}
