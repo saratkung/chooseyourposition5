@@ -13,8 +13,11 @@ import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { toFriendlyMessage } from "@/lib/utils/errors";
 import type { SystemStatus, SelectionMode, SelectPositionResult } from "@/types/database";
 
+// "finished" is deliberately NOT a dead end — an admin who fat-fingered
+// FINISH SYSTEM (or wants to run a second round) can always reopen it via
+// OPEN SYSTEM, same as from "waiting".
 const ACTIONS: { status: SystemStatus; label: string; icon: typeof Play; from: SystemStatus[] }[] = [
-  { status: "live", label: "OPEN SYSTEM", icon: Play, from: ["waiting", "paused"] },
+  { status: "live", label: "OPEN SYSTEM", icon: Play, from: ["waiting", "paused", "finished"] },
   { status: "paused", label: "PAUSE SYSTEM", icon: Pause, from: ["live"] },
   { status: "live", label: "RESUME SYSTEM", icon: RotateCcw, from: ["paused"] },
   { status: "finished", label: "FINISH SYSTEM", icon: Square, from: ["live", "paused", "waiting"] },
