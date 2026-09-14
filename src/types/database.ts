@@ -102,6 +102,7 @@ export type SelectPositionResult = {
   reference_code?: string;
   position_code?: string;
   current_turn_seniority_order?: number | null;
+  cleared_count?: number;
 };
 
 export type CurrentTurn = {
@@ -174,6 +175,10 @@ export type Database = {
       get_results: {
         Args: Record<string, never>;
         Returns: ResultRow[];
+      };
+      reset_selections: {
+        Args: Record<string, never>;
+        Returns: SelectPositionResult;
       };
     };
   };

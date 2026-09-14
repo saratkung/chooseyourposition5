@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Play, Pause, RotateCcw, Square, SkipForward, ListOrdered, Shuffle, UserPlus, Lock } from "lucide-react";
+import { Play, Pause, RotateCcw, Square, SkipForward, ListOrdered, Shuffle, UserPlus, Lock, RefreshCcw } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -103,6 +103,30 @@ export default function AdminSettingsPage() {
       return;
     }
     push(open ? "เปิดรับสมัครแล้ว" : "ปิดรับสมัครแล้ว", "success");
+  }
+
+  async function handleResetSelections() {
+    const confirmed = window.confirm(
+      "ยืนยันล้างข้อมูลการเลือกตำแหน่งทั้งหมด?\n\n" +
+        "ตำแหน่งที่ถูกเลือกไปแล้วทั้งหมดจะกลับมาว่าง (AVAILABLE) และคิวอาวุโสจะเริ่มนับใหม่ตั้งแต่ต้น\n\n" +
+        "บัญชีผู้ใช้ที่สมัครไว้จะไม่ถูกลบ — การกระทำนี้ไม่สามารถย้อนกลับได้",
+    );
+    if (!confirmed) return;
+
+    setPending(true);
+    const supabase = getSupabaseBrowserClient();
+    const { data, error } = await supabase.rpc("reset_selections");
+    setPending(false);
+    if (error) {
+      push(toFriendlyMessage(error), "error");
+      return;
+    }
+    const result = data as unknown as SelectPositionResult;
+    if (!result.success) {
+      push(result.message ?? "ไม่สามารถล้างข้อมูลการเลือกตำแหน่งได้", "error");
+      return;
+    }
+    push(`ล้างข้อมูลการเลือกตำแหน่งแล้ว (${result.cleared_count ?? 0} รายการ)`, "success");
   }
 
   async function handleUpdateOpenAt() {
@@ -268,6 +292,19 @@ export default function AdminSettingsPage() {
             Currently set to: {new Date(settings.open_at).toLocaleString("th-TH")}
           </p>
         )}
+      </Card>
+
+      <Card className="flex flex-col gap-4 border-status-taken/30 p-6">
+        <h2 className="text-sm font-semibold uppercase tracking-widest text-status-taken">Danger Zone</h2>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-muted">
+            ล้างการเลือกตำแหน่งทั้งหมด — ตำแหน่งกลับมาว่างหมด คิวอาวุโสเริ่มใหม่ (ไม่ลบบัญชีผู้ใช้)
+          </p>
+          <Button variant="danger" size="sm" disabled={pending} onClick={handleResetSelections}>
+            <RefreshCcw className="h-3.5 w-3.5" />
+            RESET SELECTIONS
+          </Button>
+        </div>
       </Card>
     </div>
   );
