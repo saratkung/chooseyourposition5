@@ -1,0 +1,187 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { LayoutGrid, User as UserIcon } from "lucide-react";
+import { AppShell, type NavItem } from "@/components/layout/AppShell";
+import { PositionCard } from "@/components/positions/PositionCard";
+import { PositionFilters, type PositionFilterState } from "@/components/positions/PositionFilters";
+import { ConfirmSelectModal } from "@/components/positions/ConfirmSelectModal";
+import { SystemStatusPill } from "@/components/system/SystemStatusPill";
+import { StatTile } from "@/components/ui/StatTile";
+import { Button } from "@/components/ui/Button";
+import { useAuth } from "@/lib/supabase/auth-context";
+import { useRealtimePositions } from "@/hooks/useRealtimePositions";
+import { useRealtimeSystem } from "@/hooks/useRealtimeSystem";
+import { useRealtimeSelections } from "@/hooks/useRealtimeSelections";
+import { usePositionActivityBroadcast } from "@/hooks/usePositionActivityBroadcast";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
+import type { PositionRow } from "@/types/database";
+
+const NAV_ITEMS: NavItem[] = [
+  { href: "/positions", label: "Positions", icon: LayoutGrid },
+  { href: "/my-position", label: "My Position", icon: UserIcon },
+];
+
+const PAGE_SIZE = 12;
+
+export default function PositionsPage() {
+  const router = useRouter();
+  const { user } = useAuth();
+  const { positions, loading, error } = useRealtimePositions();
+  const { settings } = useRealtimeSystem();
+  const { selection } = useRealtimeSelections(user?.id);
+  const { selectingIds, notifySelecting, notifyIdle } = usePositionActivityBroadcast();
+
+  const [filters, setFilters] = useState<PositionFilterState>({
+    query: "",
+    department: "all",
+    division: "all",
+    status: "all",
+  });
+  const debouncedQuery = useDebouncedValue(filters.query, 250);
+  const [page, setPage] = useState(1);
+  const [activePosition, setActivePosition] = useState<PositionRow | null>(null);
+
+  // Already selected (e.g. via another tab) -> bounce to /my-position live.
+  useEffect(() => {
+    if (selection) router.push("/my-position");
+  }, [selection, router]);
+
+  function handleFiltersChange(next: PositionFilterState) {
+    setFilters(next);
+    setPage(1);
+  }
+
+  const departments = useMemo(
+    () => Array.from(new Set(positions.map((p) => p.department))).sort(),
+    [positions],
+  );
+  const divisions = useMemo(
+    () => Array.from(new Set(positions.map((p) => p.division))).sort(),
+    [positions],
+  );
+
+  const filtered = useMemo(() => {
+    const q = debouncedQuery.trim().toLowerCase();
+    return positions.filter((p) => {
+      if (filters.department !== "all" && p.department !== filters.department) return false;
+      if (filters.division !== "all" && p.division !== filters.division) return false;
+      if (filters.status !== "all" && p.status !== filters.status) return false;
+      if (!q) return true;
+      return (
+        p.position_code.toLowerCase().includes(q) ||
+        p.department.toLowerCase().includes(q) ||
+        p.division.toLowerCase().includes(q) ||
+        p.location.toLowerCase().includes(q)
+      );
+    });
+  }, [positions, filters, debouncedQuery]);
+
+  const stats = useMemo(() => {
+    const available = positions.filter((p) => p.status === "available").length;
+    const taken = positions.filter((p) => p.status === "taken").length;
+    return { available, taken, total: positions.length };
+  }, [positions]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const pageItems = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  const systemLive = settings?.system_status === "live";
+
+  function openConfirm(position: PositionRow) {
+    setActivePosition(position);
+    notifySelecting(position.id);
+  }
+
+  function closeConfirm() {
+    if (activePosition) notifyIdle(activePosition.id);
+    setActivePosition(null);
+  }
+
+  return (
+    <AppShell navItems={NAV_ITEMS} eyebrow="Position Selection">
+      <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-8 sm:px-6 lg:px-10 lg:py-10">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">POSITION SELECTION</h1>
+            <div className="mt-2">
+              <SystemStatusPill status={settings?.system_status ?? "live"} />
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            <StatTile label="Available" value={stats.available} accent="available" />
+            <StatTile label="Taken" value={stats.taken} accent="taken" />
+            <StatTile label="Total" value={stats.total} />
+          </div>
+        </div>
+
+        {!systemLive && (
+          <div className="rounded-lg border border-status-taken/30 bg-status-taken/10 px-5 py-4 text-sm text-status-taken">
+            {settings?.system_status === "paused"
+              ? "SYSTEM PAUSED — ขณะนี้ไม่สามารถเลือกตำแหน่งได้ กรุณารอจนกว่าผู้ดูแลระบบจะเปิดใช้งานอีกครั้ง"
+              : settings?.system_status === "finished"
+                ? "ระบบการเลือกตำแหน่งได้ปิดลงแล้ว"
+                : "ระบบยังไม่เปิดให้เลือกตำแหน่ง"}
+          </div>
+        )}
+
+        <PositionFilters
+          filters={filters}
+          departments={departments}
+          divisions={divisions}
+          onChange={handleFiltersChange}
+        />
+
+        {error && <p className="text-sm text-status-taken">{error}</p>}
+
+        {loading ? (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="h-40 animate-pulse rounded-lg border border-border bg-surface" />
+            ))}
+          </div>
+        ) : pageItems.length === 0 ? (
+          <div className="rounded-lg border border-border bg-surface py-16 text-center text-sm text-muted">
+            ไม่พบตำแหน่งที่ตรงกับการค้นหา
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {pageItems.map((position) => (
+              <PositionCard
+                key={position.id}
+                position={position}
+                isSelectingLive={selectingIds.has(position.id)}
+                disabledReason={!systemLive ? "system_not_live" : null}
+                onSelect={openConfirm}
+              />
+            ))}
+          </div>
+        )}
+
+        {totalPages > 1 && (
+          <div className="flex items-center justify-center gap-2 pt-2">
+            <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
+              ก่อนหน้า
+            </Button>
+            <span className="px-2 text-xs text-muted">
+              หน้า {page} / {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page >= totalPages}
+              onClick={() => setPage((p) => p + 1)}
+            >
+              ถัดไป
+            </Button>
+          </div>
+        )}
+      </div>
+
+      {activePosition && (
+        <ConfirmSelectModal key={activePosition.id} position={activePosition} onClose={closeConfirm} />
+      )}
+    </AppShell>
+  );
+}
