@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Download, Upload, Search } from "lucide-react";
+import { ArrowDownUp, Download, Upload, Search } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -24,6 +24,7 @@ export default function AdminUsersPage() {
   const [importing, setImporting] = useState(false);
   const [savingId, setSavingId] = useState<string | null>(null);
   const [selectedByUser, setSelectedByUser] = useState<Set<string>>(new Set());
+  const [sortBySeniority, setSortBySeniority] = useState(false);
 
   useEffect(() => {
     const supabase = getSupabaseBrowserClient();
@@ -45,6 +46,13 @@ export default function AdminUsersPage() {
         p.email.toLowerCase().includes(q),
     );
   }, [participants, debouncedQuery]);
+
+  const sorted = useMemo(() => {
+    if (!sortBySeniority) return filtered;
+    return filtered
+      .slice()
+      .sort((a, b) => (a.seniority_order ?? Infinity) - (b.seniority_order ?? Infinity));
+  }, [filtered, sortBySeniority]);
 
   async function handleSeniorityChange(profileId: string, userId: string, value: string) {
     const trimmed = value.trim();
@@ -159,9 +167,19 @@ export default function AdminUsersPage() {
         </div>
       </div>
 
-      <div className="relative max-w-sm">
-        <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
-        <Input placeholder="ค้นหาชื่อ หรืออีเมล..." value={query} onChange={(e) => setQuery(e.target.value)} className="pl-10" />
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="relative max-w-sm flex-1">
+          <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
+          <Input placeholder="ค้นหาชื่อ หรืออีเมล..." value={query} onChange={(e) => setQuery(e.target.value)} className="pl-10" />
+        </div>
+        <Button
+          variant={sortBySeniority ? "primary" : "outline"}
+          size="sm"
+          onClick={() => setSortBySeniority((v) => !v)}
+        >
+          <ArrowDownUp className="h-3.5 w-3.5" />
+          เรียงตามลำดับอาวุโส
+        </Button>
       </div>
 
       <Card className="px-6 py-4">
@@ -171,7 +189,7 @@ export default function AdminUsersPage() {
               <div key={i} className="h-6 animate-pulse rounded bg-surface-2" />
             ))}
           </div>
-        ) : filtered.length === 0 ? (
+        ) : sorted.length === 0 ? (
           <p className="py-14 text-center text-sm text-muted">ไม่พบผู้ใช้</p>
         ) : (
           <div className="overflow-x-auto">
@@ -185,7 +203,7 @@ export default function AdminUsersPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {filtered.map((p) => (
+                {sorted.map((p) => (
                   <tr key={p.id} className="hover:bg-surface-2/50">
                     <td className="py-3 pr-4">
                       {p.first_name} {p.last_name}

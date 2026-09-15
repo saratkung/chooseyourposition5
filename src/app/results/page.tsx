@@ -1,10 +1,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Search } from "lucide-react";
+import { ArrowDownUp, Search } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { ADMIN_NAV_ITEMS, USER_NAV_ITEMS } from "@/components/layout/nav-items";
 import { Card } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { StatTile } from "@/components/ui/StatTile";
 import { PositionStatusBadge } from "@/components/positions/PositionStatusBadge";
@@ -19,6 +20,7 @@ export default function ResultsPage() {
   const { results, loading } = useRealtimeResults();
   const [query, setQuery] = useState("");
   const debouncedQuery = useDebouncedValue(query, 250);
+  const [sortBySeniority, setSortBySeniority] = useState(false);
 
   const filtered = useMemo(() => {
     const q = debouncedQuery.trim().toLowerCase();
@@ -34,6 +36,13 @@ export default function ResultsPage() {
       );
     });
   }, [results, debouncedQuery]);
+
+  const sorted = useMemo(() => {
+    if (!sortBySeniority) return filtered;
+    return filtered
+      .slice()
+      .sort((a, b) => (a.selected_by_seniority_order ?? Infinity) - (b.selected_by_seniority_order ?? Infinity));
+  }, [filtered, sortBySeniority]);
 
   const stats = useMemo(() => {
     const taken = results.filter((r) => r.status === "taken").length;
@@ -51,14 +60,24 @@ export default function ResultsPage() {
           </div>
         </div>
 
-        <div className="relative max-w-sm">
-          <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
-          <Input
-            placeholder="ค้นหาตำแหน่ง หรือชื่อผู้เลือก..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            className="pl-10"
-          />
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <div className="relative max-w-sm flex-1">
+            <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
+            <Input
+              placeholder="ค้นหาตำแหน่ง หรือชื่อผู้เลือก..."
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <Button
+            variant={sortBySeniority ? "primary" : "outline"}
+            size="sm"
+            onClick={() => setSortBySeniority((v) => !v)}
+          >
+            <ArrowDownUp className="h-3.5 w-3.5" />
+            เรียงตามลำดับอาวุโส
+          </Button>
         </div>
 
         <Card className="px-6 py-4">
@@ -68,7 +87,7 @@ export default function ResultsPage() {
                 <div key={i} className="h-6 animate-pulse rounded bg-surface-2" />
               ))}
             </div>
-          ) : filtered.length === 0 ? (
+          ) : sorted.length === 0 ? (
             <p className="py-14 text-center text-sm text-muted">ไม่พบตำแหน่งที่ตรงกับการค้นหา</p>
           ) : (
             <div className="overflow-x-auto">
@@ -85,7 +104,7 @@ export default function ResultsPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {filtered.map((r) => (
+                  {sorted.map((r) => (
                     <tr key={r.position_id} className="hover:bg-surface-2/50">
                       <td className="py-3 pr-4 font-mono font-semibold">{r.position_code}</td>
                       <td className="py-3 pr-4 text-foreground/90">{r.department}</td>
