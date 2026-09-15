@@ -13,9 +13,11 @@ type Step = "confirm" | "allocating" | "success" | "failure";
 
 export function ConfirmSelectModal({
   position,
+  preview = false,
   onClose,
 }: {
   position: PositionRow;
+  preview?: boolean;
   onClose: () => void;
 }) {
   const router = useRouter();
@@ -25,6 +27,22 @@ export function ConfirmSelectModal({
 
   async function handleConfirm() {
     setStep("allocating");
+
+    // Preview mode (admin browsing as a participant): simulate the flow
+    // without touching `selections` — never call select_position for real.
+    if (preview) {
+      setTimeout(() => {
+        setResult({
+          success: true,
+          position_code: position.position_code,
+          reference_code: "PREVIEW",
+        });
+        setStep("success");
+        setTimeout(onClose, 1400);
+      }, 700);
+      return;
+    }
+
     const supabase = getSupabaseBrowserClient();
     const { data, error } = await supabase.rpc("select_position", { p_position_id: position.id });
 

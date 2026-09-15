@@ -7,6 +7,7 @@ import {
   ListOrdered,
   LayoutGrid,
   User as UserIcon,
+  Eye,
 } from "lucide-react";
 import type { NavItem } from "@/components/layout/AppShell";
 
@@ -21,6 +22,7 @@ export const ADMIN_NAV_ITEMS: NavItem[] = [
   { href: "/admin/settings", label: "System", icon: <Settings className="h-4 w-4" /> },
   { href: "/admin/monitor", label: "Monitor", icon: <Activity className="h-4 w-4" /> },
   { href: "/results", label: "Results", icon: <ListOrdered className="h-4 w-4" /> },
+  { href: "/positions?preview=1", label: "Preview", icon: <Eye className="h-4 w-4" /> },
 ];
 
 export const USER_NAV_ITEMS: NavItem[] = [
