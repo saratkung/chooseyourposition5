@@ -44,9 +44,16 @@ export function useRealtimeSystem() {
     }
     window.addEventListener("online", handleOnline);
 
+    // Safety net: the seniority queue is only ever gated by this row, so a
+    // silently dropped realtime event (backgrounded tab, flaky socket) would
+    // otherwise leave a user staring at "not your turn" forever with no
+    // sign anything is wrong. Cheap enough to poll alongside the subscription.
+    const pollId = window.setInterval(loadInitial, 15000);
+
     return () => {
       active = false;
       window.removeEventListener("online", handleOnline);
+      window.clearInterval(pollId);
       supabase.removeChannel(channel);
     };
   }, []);
