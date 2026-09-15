@@ -12,8 +12,10 @@ import { useRealtimeSystem } from "@/hooks/useRealtimeSystem";
 function SectionHeader({ icon, label, href }: { icon: React.ReactNode; label: string; href: string }) {
   return (
     <div className="flex items-center gap-3">
-      <span className="flex items-center gap-2 text-sm font-semibold uppercase tracking-widest text-foreground/90">
-        {icon}
+      <span className="flex items-center gap-2.5 text-sm font-bold uppercase tracking-widest text-foreground">
+        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-accent text-white shadow-[0_0_16px_rgba(139,92,246,0.7)]">
+          {icon}
+        </span>
         {label}
       </span>
       <span className="h-px flex-1 bg-border" />
@@ -91,7 +93,7 @@ export default function AdminDashboardPage() {
       ) : (
         <>
           <section className="flex flex-col gap-4">
-            <SectionHeader icon={<Users2 className="h-4 w-4 text-accent" />} label="Users" href="/admin/users" />
+            <SectionHeader icon={<Users2 className="h-4 w-4" />} label="Users" href="/admin/users" />
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               <DashboardStatCard
                 label="Total Users"
@@ -119,7 +121,7 @@ export default function AdminDashboardPage() {
 
           <section className="flex flex-col gap-4">
             <SectionHeader
-              icon={<ShieldCheck className="h-4 w-4 text-accent" />}
+              icon={<ShieldCheck className="h-4 w-4" />}
               label="Positions"
               href="/admin/positions"
             />
