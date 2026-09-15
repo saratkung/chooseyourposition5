@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Eye } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
@@ -26,6 +26,14 @@ import type { PositionRow } from "@/types/database";
 const PAGE_SIZE = 12;
 
 export default function PositionsPage() {
+  return (
+    <Suspense fallback={null}>
+      <PositionsPageInner />
+    </Suspense>
+  );
+}
+
+function PositionsPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, profile } = useAuth();
