@@ -13,7 +13,7 @@ function SectionHeader({ icon, label, href }: { icon: React.ReactNode; label: st
   return (
     <div className="flex items-center gap-3">
       <span className="flex items-center gap-2.5 text-sm font-bold uppercase tracking-widest text-foreground">
-        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-accent text-white shadow-[0_0_16px_rgba(139,92,246,0.7)]">
+        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-accent text-white shadow-[0_0_16px_rgba(196,33,60,0.7)]">
           {icon}
         </span>
         {label}

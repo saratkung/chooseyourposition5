@@ -7,8 +7,8 @@ const VARIANT_STYLES: Record<Variant, { border: string; wash: string; badge: str
   violet: {
     border: "border-accent/50",
     wash: "from-accent/30 via-accent/5 to-transparent",
-    badge: "bg-accent text-white shadow-[0_0_16px_rgba(139,92,246,0.7)]",
-    glow: "shadow-[0_0_28px_-6px_rgba(139,92,246,0.55)]",
+    badge: "bg-accent text-white shadow-[0_0_16px_rgba(196,33,60,0.7)]",
+    glow: "shadow-[0_0_28px_-6px_rgba(196,33,60,0.55)]",
   },
   emerald: {
     border: "border-emerald-400/50",

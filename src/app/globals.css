@@ -7,9 +7,12 @@
   --border: #2f2740;
   --foreground: #f6f4fa;
   --muted: #9a90ae;
-  --accent: #8b5cf6;
-  --accent-hover: #a78bfa;
-  --accent-soft: rgba(139, 92, 246, 0.16);
+  --accent: #c4213c;
+  --accent-hover: #e0455f;
+  --accent-soft: rgba(196, 33, 60, 0.16);
+  --gold: #d4af37;
+  --gold-hover: #e6c761;
+  --gold-soft: rgba(212, 175, 55, 0.16);
   --status-available: #22c55e;
   --status-selecting: #eab308;
   --status-taken: #ef4444;
@@ -28,6 +31,9 @@
   --color-accent: var(--accent);
   --color-accent-hover: var(--accent-hover);
   --color-accent-soft: var(--accent-soft);
+  --color-gold: var(--gold);
+  --color-gold-hover: var(--gold-hover);
+  --color-gold-soft: var(--gold-soft);
   --color-status-available: var(--status-available);
   --color-status-selecting: var(--status-selecting);
   --color-status-taken: var(--status-taken);
