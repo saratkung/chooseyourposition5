@@ -32,7 +32,7 @@ export function SelectionsFeed({ results, loading }: { results: ResultRow[]; loa
                 )}
               </div>
               <div className="mt-1 flex items-center gap-2 text-xs">
-                <span className="font-mono font-semibold text-accent">{r.position_code}</span>
+                <span className="truncate font-semibold text-accent">{r.location}</span>
                 <span className="truncate text-muted">{r.department}</span>
               </div>
               {r.selected_at && (

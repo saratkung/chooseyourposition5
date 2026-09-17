@@ -79,8 +79,11 @@ export function ConfirmSelectModal({
         <div className="flex flex-col gap-5">
           <div className="text-center">
             <p className="text-xs font-semibold uppercase tracking-[0.25em] text-muted">Confirm Position</p>
-            <p className="mt-3 font-mono text-4xl font-bold text-foreground">{position.position_code}</p>
-            <p className="mt-1 text-sm text-muted">{position.department} · {position.location}</p>
+            <p className="mt-3 text-3xl font-bold text-foreground">{position.location}</p>
+            <p className="mt-1 text-sm text-muted">
+              {position.department} · {position.division}
+            </p>
+            <p className="mt-1 font-mono text-xs text-muted">{position.position_code}</p>
           </div>
           <p className="text-center text-sm text-foreground/90">คุณต้องการเลือกตำแหน่งนี้หรือไม่?</p>
           <div className="grid grid-cols-2 gap-3">
@@ -110,11 +113,14 @@ export function ConfirmSelectModal({
           <p className="text-sm font-bold uppercase tracking-widest text-status-available">
             Position Confirmed
           </p>
-          <p className="font-mono text-3xl font-bold text-foreground">{result.position_code}</p>
+          <p className="text-2xl font-bold text-foreground">{position.location}</p>
           <p className="text-sm text-muted">{position.department}</p>
-          <div className="mt-2 rounded-md border border-border bg-surface-2 px-4 py-2">
-            <p className="text-[10px] uppercase tracking-widest text-muted">Reference</p>
-            <p className="font-mono text-sm font-semibold text-foreground">{result.reference_code}</p>
+          <div className="mt-2 flex flex-col items-center gap-2">
+            <div className="rounded-md border border-border bg-surface-2 px-4 py-2">
+              <p className="text-[10px] uppercase tracking-widest text-muted">Reference</p>
+              <p className="font-mono text-sm font-semibold text-foreground">{result.reference_code}</p>
+            </div>
+            <p className="font-mono text-xs text-muted">{result.position_code}</p>
           </div>
         </div>
       )}

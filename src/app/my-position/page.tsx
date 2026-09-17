@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { MapPin, Building2, BadgeCheck } from "lucide-react";
+import { Hash, Building2, BadgeCheck } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { USER_NAV_ITEMS } from "@/components/layout/nav-items";
 import { Button } from "@/components/ui/Button";
@@ -53,13 +53,13 @@ export default function MyPositionPage() {
             <div className="flex flex-col items-center gap-3 border-b border-border bg-status-available/10 px-6 py-8 text-center">
               <BadgeCheck className="h-10 w-10 text-status-available" />
               <p className="text-xs font-bold uppercase tracking-widest text-status-available">Confirmed</p>
-              <p className="font-mono text-4xl font-bold text-foreground">{position.position_code}</p>
+              <p className="text-3xl font-bold text-foreground">{position.location}</p>
             </div>
 
             <div className="flex flex-col divide-y divide-border">
               <Row icon={Building2} label="Department" value={position.department} />
-              <Row icon={MapPin} label="Location" value={position.location} />
               <Row label="Division" value={position.division} />
+              <Row icon={Hash} label="Position Code" value={position.position_code} />
               <Row label="Selected At" value={formatDateTime(selection.selected_at)} />
               <div className="flex items-center justify-between px-6 py-4">
                 <span className="text-xs font-semibold uppercase tracking-widest text-muted">

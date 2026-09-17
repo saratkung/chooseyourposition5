@@ -1,4 +1,4 @@
-import { Building2, MapPin } from "lucide-react";
+import { Building2, Hash } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { PositionStatusBadge } from "@/components/positions/PositionStatusBadge";
@@ -27,10 +27,8 @@ export function PositionCard({
         canSelect ? "hover:border-accent/50" : "opacity-90",
       )}
     >
-      <div className="flex items-start justify-between">
-        <span className="font-mono text-2xl font-bold tracking-wide text-foreground">
-          {position.position_code}
-        </span>
+      <div className="flex items-start justify-between gap-3">
+        <span className="text-xl font-bold leading-snug text-foreground">{position.location}</span>
         <PositionStatusBadge status={effectiveStatus} pulse={effectiveStatus === "selecting"} />
       </div>
 
@@ -41,8 +39,8 @@ export function PositionCard({
           <span className="text-muted">· {position.division}</span>
         </div>
         <div className="flex items-center gap-2">
-          <MapPin className="h-3.5 w-3.5 shrink-0" />
-          {position.location}
+          <Hash className="h-3.5 w-3.5 shrink-0" />
+          <span className="font-mono text-xs">{position.position_code}</span>
         </div>
       </div>
 
